@@ -1,4 +1,23 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
+USER root
+WORKDIR /
+RUN useradd -ms /bin/bash openvino && \
+    chown openvino -R /home/openvino
+ARG DEPENDENCIES="autoconf \
+                  automake \
+                  build-essential \
+                  cmake \
+                  cpio \
+                  curl \
+                  gnupg2 \
+                  libdrm2 \
+                  libglib2.0-0 \
+                  lsb-release \
+                  libgtk-3-0 \
+                  libtool \
+                  python3-pip \
+                  udev \
+                  unzip"
 
 ARG proxy
 
@@ -11,17 +30,10 @@ trusted-host = pypi.python.org \n \
 \t               pypi.org \n \
 \t              files.pythonhosted.org" >> /etc/pip.conf
 
-# >> START Install base software
-# Basic update and Set the locale to en_US.UTF-8, because the Yocto build fails without any locale set.
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends locales ca-certificates &&  rm -rf /var/lib/apt/lists/*
-
-# Locale set to something minimal like POSIX
-RUN locale-gen en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-
-# Exit when RUN get non-zero value
-RUN set -e 
+# download dependencies    
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ${DEPENDENCIES} && \
+    rm -rf /var/lib/apt/lists/*
 
 # Get basic packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -60,27 +72,16 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
     python get-pip.py && \
     rm get-pip.py
 
-# # Install openvivoToolKit
-ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/16057/l_openvino_toolkit_p_2019.3.376.tgz
-ARG INSTALL_DIR=/opt/intel/openvino
-ARG TEMP_DIR=/tmp/openvino_installer
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    cpio \
-    sudo \
-    lsb-release && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p $TEMP_DIR && cd $TEMP_DIR && \
-    wget -c $DOWNLOAD_LINK && \
-    tar xf l_openvino_toolkit*.tgz && \
-    cd l_openvino_toolkit* && \
-    sed -i 's/decline/accept/g' silent.cfg && \
-    ./install.sh -s silent.cfg && \
-    rm -rf $TEMP_DIR
-
-RUN $INSTALL_DIR/install_dependencies/install_openvino_dependencies.sh
-
-# build Inference Engine samples
-RUN mkdir $INSTALL_DIR/deployment_tools/inference_engine/samples/build && cd $INSTALL_DIR/deployment_tools/inference_engine/samples/build && \
-    /bin/bash -c "source $INSTALL_DIR/bin/setupvars.sh && cmake .. && make -j1"
+ARG DOWNLOAD_LINK=http://registrationcenter-download.intel.com/akdlm/irc_nas/16345/l_openvino_toolkit_p_2020.1.023.tgz
+RUN export OV_BUILD OV_FOLDER
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -LOJ "${DOWNLOAD_LINK}" && \
+    tar -xzf ./*.tgz && \
+    OV_BUILD="$(ls -lA | grep openvino | tr -s " " | cut -d\  -f9 | cut -d_ -f7 | head -n 1)" && \
+    OV_FOLDER="$(ls -lA | grep openvino | tr -s " " | cut -d\  -f9 | head -n 1)" && \
+    mkdir -p /opt/intel/openvino_"$OV_BUILD"/ && \
+    cp -rf "$OV_FOLDER"/*  /opt/intel/openvino_"$OV_BUILD"/ && \
+    rm -rf /tmp/"$OV_FOLDER" && \
+    rm -rf /tmp/*.tgz && \
+    ln --symbolic /opt/intel/openvino_"$OV_BUILD"/ /opt/intel/openvino
+ENV INSTALLDIR /opt/intel/openvino

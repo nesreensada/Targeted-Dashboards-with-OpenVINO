@@ -6,8 +6,8 @@ python app.py -i "images/man_face.jpg" -t "AGE_GEN" -m "/home/workspace/models/a
 
 
 # test the preprocessing
-python app.py -i "images/man_face.jpg" -t "FACE" -m "/home/workspace/models/face-detection-retail-0004.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
 
+python app.py -i "images/group_people.jpg" -t "FACE" -m "/home/workspace/models/face-detection-retail-0004.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so" -ct 0.5
 
 # steps in docker:
 
