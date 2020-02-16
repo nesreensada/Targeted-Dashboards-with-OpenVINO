@@ -68,7 +68,13 @@ def handle_face_detection(output, input_shape):
     num_bounding = output['detection_out'].shape[2]   
     detection_out = output['detection_out'].reshape(num_bounding,7)
     return detection_out  
-
+def handle_head_pose(output, input_shape):
+    '''
+    Handles the output of the head pose model.
+    Returns angle of the  output all to the user and handle the mutliple in create ouput
+    '''
+    print(output.keys())
+    return None
 def handle_output(model_type):
     '''
     Returns the related function to handle an output,
@@ -84,6 +90,8 @@ def handle_output(model_type):
         return handle_age_gender
     elif model_type =='FACE':
         return handle_face_detection
+    elif model_type == 'HEAD_POSE':
+        return handle_head_pose
     else:
         return None
 

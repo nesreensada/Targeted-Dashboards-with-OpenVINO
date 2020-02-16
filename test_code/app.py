@@ -22,7 +22,7 @@ def get_args():
     i_desc = "The location of the input image"
     m_desc = "The location of the model XML file"
     # TODO: this needs to change according to our models
-    t_desc = "The type of model: POSE, TEXT, TEXT_REC, Face or CAR_META"
+    t_desc = "The type of model: POSE, TEXT, TEXT_REC, Face, HEAD_POSE or CAR_META"
 
     conf_threshold = "The thershold for expected image thershold"
     # -- Add required and optional groups
@@ -130,6 +130,19 @@ def create_output_image(model_type, image, output, conf_threshold):
                 image = cv2.rectangle(
                     image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
         return image
+    elif model_type == 'HEAD_POSE':
+        # for detected_box in output:
+        #     image_id = detected_box[0]
+        #     label = int(detected_box[1])
+        #     confidence = float(detected_box[2])
+        #     if confidence > conf_threshold:
+        #         x_min = int(detected_box[3] * image.shape[1])
+        #         y_min = int(detected_box[4] * image.shape[0])
+        #         x_max = int(detected_box[5] * image.shape[1])
+        #         y_max = int(detected_box[6] * image.shape[0])
+        #         image = cv2.rectangle(
+        #             image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+        return image  
     else:
         print("Unknown model type, unable to create output image.")
         return image
