@@ -161,17 +161,88 @@ def main():
             # Async disabled
             infer_network_fd.exec_net(cur_request_id, in_frame_fd)
 
+        people_dict = {}
         # Wait for the result
         if infer_network.wait(cur_request_id) == 0:
             det_time_fd = time.time() - inf_start_fd
         # Results of the output layer of the network
             res = infer_network.get_output(cur_request_id)
             # Parse face detection output
-            # TODO: the below is to be implemented
-            faces = handle_models.face_detection(res, args, initial_wh)
-            # here we need to add handling the poses 
+            faces = hansdle_models.face_detection(res, args, initial_wh)
+            # TODO: save the faces on output directory if it is a static image only 
+            if image_flag:
+            	# store this in the output directory or sth like this 
+            	image = cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+            # here we need to add handling the poses and age 
             # then extracting the age ?? for items that are looking in the correct direction?
-	pass
+            if len(faces) > 0:
+            	# look for people poses and the age of people also
+            	for face_id, face_loc in enumerate(faces):
+
+            		xmin, ymin, xmax, ymax = face_loc
+            		face_frame = frame[ymin:ymax, xmin:xmax]
+
+            		# preprocessing for headpose and age models
+            		in_frame_hp = handle_models.preprocessing(face_frame, (w_p, h_p))
+            		in_frame_age = handle_models.preprocessing(face_frame, (w_a, h_a))
+            		
+
+            		inf_start_hp = time.time()
+                    infer_network_pose.exec_net(cur_request_id, in_frame_hp)
+                    infer_network_pose.wait(cur_request_id)
+                    det_time_hp = time.time() - inf_start_hp
+
+                    # Parse head pose detection results
+                    # pitch angle: Pitch around the X-axis
+                    angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc")
+                    # yaw pose: Yaw is the rotation around the Y-axis.   
+                    angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc")
+
+                    # this needs to be moved to the decision stage and preporcessing 
+                   	looking_flag = handle_models.pose_detection(yaw = angle_y_fc, pitch=angle_p_fc)
+
+                    # age detection 
+                    inf_start_a = time.time()
+                    infer_network_age.exec_net(cur_request_id, in_frame_age)
+                    infer_network_age.wait(cur_request_id)
+                    det_time_a = time.time() - inf_start_a
+
+                    # check if i need to flatten or no
+                    human_age = infer_network_pose.get_output(0, "age_conv3")#.flatten()
+    				human_gender = infer_network_pose.get_output(0, "prob")#.flatten()
+    				age, gender = handle_models.age_detection(human_age, human_gender)
+            		people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc}, 'age': age, 'gender':gender, 'looking':looking_flag}
+            		
+            		# if i have an image to put the labels for gender and all 
+            # stats messages
+            # Draw performance stats
+        	inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
+            "Inference time: {:.3f} ms".format(det_time_fd * 1000)
+            # maybe with logger
+            # age detection message
+            # pose model message
+            # put in the frame or the video
+            else:
+            	print("Default Dashboard since we don't have any on lookers")
+    	if key_pressed == 27:
+            print("Attempting to stop background threads")
+            break
+        if key_pressed == 9:
+            is_async_mode = not is_async_mode
+            print("Switched to {} mode".format("async" if is_async_mode else "sync"))
+
+        if is_async_mode:
+            # Swap infer request IDs
+            cur_request_id, next_request_id = next_request_id, cur_request_id
+
+    #TODO: cleaning and such 
+    infer_network.clean()
+    infer_network_pose.clean()
+    infer_network_age.clean()
+    cap.release()
+    cv2.destroyAllWindows()
+    CLIENT.disconnect()
+
 
 
 
