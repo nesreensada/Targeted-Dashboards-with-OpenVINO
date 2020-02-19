@@ -65,7 +65,8 @@ def age_detection(age, gender):
 	"""
     Method to extract the age of the the detected face.
     Args:
-
+		age
+		gender
     Returns: 
     	Age of the given face coordinates
     """
@@ -85,9 +86,30 @@ def get_mask(processed_output):
     mask = np.dstack((empty, processed_output, empty))
     return mask
 
-def create_output_image(model_type, image, output, conf_threshold):
+def create_output_image(image, image_properties):
     '''
-    Using the model type, input image, and processed output,
-    creates an output image showing the result of inference.
+    Method that use the detected image properties to add the image specs
+    thus it creates an output image showing the result of inference.
+    Args:
+		image: input image
+		image_properties: coordinates of faces, looking, age, gender, head pose angles
+    Returns:
+		output image showing the result of the inference	
     '''
-    pass
+    for face_id,face_prop in image_properties.items():
+    	# put the bounary boxs
+    	x_min, y_min, x_max, y_max = face_prop['coordinates']
+    	age = face_prop['age']
+    	gender = face_prop['gender']
+    	looking = face_prop['looking']
+    	angle_p = face_prop['pose']['pitch']
+    	angle_yaw = face_prop['pose']['yaw']
+    	image = cv2.rectangle(
+                    image, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+    	is_looking_text = 'looking' if looking else is 'not looking'
+    	# this size need to be smaller or so depending on the up coordinates
+    	cv2.putText(image,"Age: {}, Gener: {}, is {}".format(age, gender, is_looking_text),
+                            (50 * scaler, 100 * scaler), cv2.FONT_HERSHEY_SIMPLEX,
+                            2 * scaler, (255, 255, 255), 3 * scaler)
+
+    cv2.imwrite("outputs/{}-output.png".format('detected'), image)

@@ -110,8 +110,6 @@ def main():
     # Load the model in the network, and obtain its input shape
     n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, args.cpu_extension, fd_plugin)[1]
 
-
-
     # read the input stream 
     if input_stream:
         cap.open(input_stream)
@@ -126,9 +124,10 @@ def main():
     # TODO: maybe remove sync
     if is_async_mode:
         print("Application running in async mode...")
+        logger.info("Application running in async mode...")
     else:
         print("Application running in sync mode...")
-
+        logger.info("Application running in sync mode...")
     # performance bottlenecks
     det_time_fd = 0
     ret, frame = cap.read()
@@ -169,12 +168,9 @@ def main():
             res = infer_network.get_output(cur_request_id)
             # Parse face detection output
             faces = hansdle_models.face_detection(res, args, initial_wh)
-            # TODO: save the faces on output directory if it is a static image only 
-            if image_flag:
-            	# store this in the output directory or sth like this 
-            	image = cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-            # here we need to add handling the poses and age 
+
             # then extracting the age ?? for items that are looking in the correct direction?
+            # if we have one person older than 25 and looking then send to trigger older dashboard
             if len(faces) > 0:
             	# look for people poses and the age of people also
             	for face_id, face_loc in enumerate(faces):
@@ -211,17 +207,19 @@ def main():
                     human_age = infer_network_pose.get_output(0, "age_conv3")#.flatten()
     				human_gender = infer_network_pose.get_output(0, "prob")#.flatten()
     				age, gender = handle_models.age_detection(human_age, human_gender)
-            		people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc}, 'age': age, 'gender':gender, 'looking':looking_flag}
-            		
+            		people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc},
+            		 'age': age, 'gender':gender, 'looking':looking_flag}
             		# if i have an image to put the labels for gender and all 
             # stats messages
-            # Draw performance stats
         	inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
             "Inference time: {:.3f} ms".format(det_time_fd * 1000)
-            # maybe with logger
-            # age detection message
-            # pose model message
-            # put in the frame or the video
+            logger.info(inf_time_message)
+            head_inf_time_message = "Head pose Inference time: N\A for async mode" if is_async_mode else \
+                "Inference time: {:.3f} ms".format(det_time_hp * 1000)
+            logger.info(head_inf_time_message)
+            age_inf_time_message = "Age Gender Inference time: N\A for async mode" if is_async_mode else \
+                "Inference time: {:.3f} ms".format(det_time_a * 1000)
+            logger.info(head_inf_time_message)
             else:
             	print("Default Dashboard since we don't have any on lookers")
     	if key_pressed == 27:
@@ -235,16 +233,12 @@ def main():
             # Swap infer request IDs
             cur_request_id, next_request_id = next_request_id, cur_request_id
 
-    #TODO: cleaning and such 
     infer_network.clean()
     infer_network_pose.clean()
     infer_network_age.clean()
     cap.release()
     cv2.destroyAllWindows()
     CLIENT.disconnect()
-
-
-
 
 if __name__ == '__main__':
     main()
