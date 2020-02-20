@@ -238,11 +238,13 @@ def main():
 					if poeple_prop['age'] > 25 and poeple_prop['looking']:
 						data = {"dashboard": "adult"}
 						break 
+				logger.info("data sent to the client is {}".format(data))
 				client.publish("dashboard", json.dumps(data))
 
 			else:
 				print("Default Dashboard since we don't have any on lookers")
 				logger.info("Default Dashboard since we don't have any on lookers")
+				logger.info("data sent to the client is {}".format(DEFAULT_DATA))
 				client.publish("dashboard", json.dumps(DEFAULT_DATA))
 		if key_pressed == 27:
 			print("Attempting to stop background threads")
