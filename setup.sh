@@ -25,6 +25,7 @@ sudo apt-get update
 sudo apt-get install python3-pip
 sudo apt-get install mosquitto mosquitto-clients
 sudo pip3 install numpy jupyter paho-mqtt
+pip3 install opencv-python
 
 #Download the video
 cd resources
