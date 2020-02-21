@@ -23,7 +23,7 @@ def preprocessing(input_image, height, width):
 
 	return image
 
-def face_detection(res, conf_threshold, inital_wh):
+def face_detection(res, conf_threshold, initial_wh):
 	"""
 	Method to parse Face detection output.
 	Args:
@@ -32,13 +32,13 @@ def face_detection(res, conf_threshold, inital_wh):
 		list of detected faces and the coordinates for these
 	"""
 	faces = []
-	for detected_box in res:
+	for detected_box in res[0][0]:
 		confidence = float(detected_box[2])
 		if confidence > conf_threshold:
-			x_min = int(abs(detected_box[3]) * image.shape[1])
-			y_min = int(abs(detected_box[4]) * image.shape[0])
-			x_max = int(detected_box[5] * image.shape[1])
-			y_max = int(detected_box[6] * image.shape[0])
+			x_min = int(abs(detected_box[3]) * initial_wh[0])
+			y_min = int(abs(detected_box[4]) * initial_wh[1])
+			x_max = int(detected_box[5] * initial_wh[0])
+			y_max = int(detected_box[6] * initial_wh[1])
 			faces.append([x_min, y_min, x_max, y_max])
 	return faces
 
@@ -71,8 +71,8 @@ def age_detection(age, gender):
 		Age of the given face coordinates
 	"""
 	GENDER_TYPE = ["male", "female"]
-	age = int(human_age[0] * 100)
-	gender_class = GENDER_TYPE[np.argmax(human_gender)]
+	age = int(age[0] * 100)
+	gender_class = GENDER_TYPE[np.argmax(gender)]
 	return age, gender_class
 
 def get_mask(processed_output):

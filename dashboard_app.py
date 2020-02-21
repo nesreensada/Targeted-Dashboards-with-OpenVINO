@@ -95,6 +95,7 @@ def main():
 	
 	# Decide the input stream based on the config video item
 	item = config['input']['video']
+	image_flag = False
 
 	# TODO: add image as an option for the input stream 
 	if item.isdigit():
@@ -169,13 +170,13 @@ def main():
 
 		# Start asynchronous inference for specified request
 		inf_start_fd = time.time()
-
-		if is_async_mode:
-			# Async enabled and only one video capture
-			infer_network_fd.exec_net(cur_request_id, in_frame_fd)
-		else:
-			# Async disabled
-			infer_network_fd.exec_net(cur_request_id, in_frame_fd)
+		infer_network_fd.exec_net(0, in_frame_fd)
+		# if is_async_mode:
+		# 	# Async enabled and only one video capture
+		# 	infer_network_fd.exec_net(cur_request_id, in_frame_fd)
+		# else:
+		# 	# Async disabled
+		# 	infer_network_fd.exec_net(cur_request_id, in_frame_fd)
 
 		people_dict = {}
 		# Wait for the result
@@ -184,7 +185,7 @@ def main():
 		# Results of the output layer of the network
 			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
-			faces = handle_models.face_detection(res, args, initial_wh)
+			faces = handle_models.face_detection(res, args.confidence, initial_wh)
 
 			# then extracting the age ?? for items that are looking in the correct direction?
 			# if we have one person older than 25 and looking then send to trigger older dashboard
@@ -196,8 +197,8 @@ def main():
 					face_frame = frame[ymin:ymax, xmin:xmax]
 
 					# preprocessing for headpose and age models
-					in_frame_hp = handle_models.preprocessing(face_frame, (w_p, h_p))
-					in_frame_age = handle_models.preprocessing(face_frame, (w_a, h_a))
+					in_frame_hp = handle_models.preprocessing(face_frame, w_p, h_p)
+					in_frame_age = handle_models.preprocessing(face_frame, w_a, h_a)
 					
 
 					inf_start_hp = time.time()
@@ -207,9 +208,9 @@ def main():
 
 					# Parse head pose detection results
 					# pitch angle: Pitch around the X-axis
-					angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc")
+					angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc").flatten()
 					# yaw pose: Yaw is the rotation around the Y-axis.   
-					angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc")
+					angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc").flatten()
 
 					# this needs to be moved to the decision stage and preporcessing 
 					looking_flag = handle_models.pose_detection(yaw = angle_y_fc, pitch=angle_p_fc)
@@ -221,11 +222,12 @@ def main():
 					det_time_a = time.time() - inf_start_a
 
 					# check if i need to flatten or no
-					human_age = infer_network_pose.get_output(0, "age_conv3")#.flatten()
-					human_gender = infer_network_pose.get_output(0, "prob")#.flatten()
+					human_age = infer_network_age.get_output(0, "age_conv3").flatten()
+					human_gender = infer_network_age.get_output(0, "prob").flatten()
 					age, gender = handle_models.age_detection(human_age, human_gender)
 					people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc},
 					 'age': age, 'gender':gender, 'looking':looking_flag}
+				logger.info('detected_people {}'.format(people_dict))
 				# stats messages
 				inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
 				"Inference time: {:.3f} ms".format(det_time_fd * 1000)
@@ -256,15 +258,6 @@ def main():
 			print("Attempting to stop background threads")
 			logger.info("Attempting to stop background threads")
 			break
-		#TODO: remove this	
-		if key_pressed == 9:
-			is_async_mode = not is_async_mode
-			print("Switched to {} mode".format("async" if is_async_mode else "sync"))
-
-		if is_async_mode:
-			# Swap infer request IDs
-			cur_request_id, next_request_id = next_request_id, cur_request_id
-
 		if image_flag:
 			handle_models.create_output_image(frame, people_dict)
 
