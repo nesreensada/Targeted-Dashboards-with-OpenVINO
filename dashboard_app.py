@@ -82,6 +82,7 @@ def main():
 	Returns:
 		None
 	"""
+	print('test')
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
 	args = get_args()
