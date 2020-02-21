@@ -157,7 +157,11 @@ def main():
 		# number of people looking
 		looking = 0
 		ret, frame = cap.read()
-		if not ret or frame is None: 
+		
+		if not ret: 
+			log.error("ERROR! blank FRAME grabbed")
+			break
+		if frame is None:
 			log.error("ERROR! blank FRAME grabbed")
 			break
 
@@ -186,7 +190,7 @@ def main():
 			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
 			faces = handle_models.face_detection(res, args.confidence, initial_wh)
-
+			logger.info('how many faces { }'.format(len(faces)))
 			# then extracting the age ?? for items that are looking in the correct direction?
 			# if we have one person older than 25 and looking then send to trigger older dashboard
 			if len(faces) > 0:
@@ -208,9 +212,9 @@ def main():
 
 					# Parse head pose detection results
 					# pitch angle: Pitch around the X-axis
-					angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc").flatten()
+					angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc").flatten()[0]
 					# yaw pose: Yaw is the rotation around the Y-axis.   
-					angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc").flatten()
+					angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc").flatten()[0]
 
 					# this needs to be moved to the decision stage and preporcessing 
 					looking_flag = handle_models.pose_detection(yaw = angle_y_fc, pitch=angle_p_fc)
@@ -227,7 +231,6 @@ def main():
 					age, gender = handle_models.age_detection(human_age, human_gender)
 					people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc},
 					 'age': age, 'gender':gender, 'looking':looking_flag}
-				logger.info('detected_people {}'.format(people_dict))
 				# stats messages
 				inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
 				"Inference time: {:.3f} ms".format(det_time_fd * 1000)
@@ -241,9 +244,10 @@ def main():
 
 				data = DEFAULT_DATA
 
+				logger.info('detected_people {}'.format(people_dict))
 				# send the decision to the dashboard based on the people detected
 				for people_id, poeple_prop in people_dict.items():
-					if poeple_prop['age'] > 25 and poeple_prop['looking']:
+					if poeple_prop['age'] >= 25 and poeple_prop['looking']:
 						data = {"dashboard": "adult"}
 						break 
 				logger.info("data sent to the client is {}".format(data))
@@ -255,7 +259,6 @@ def main():
 				logger.info("data sent to the client is {}".format(DEFAULT_DATA))
 				#client.publish("dashboard", json.dumps(DEFAULT_DATA))
 		if key_pressed == 27:
-			print("Attempting to stop background threads")
 			logger.info("Attempting to stop background threads")
 			break
 		if image_flag:
