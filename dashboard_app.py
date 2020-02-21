@@ -130,18 +130,18 @@ def main():
 	# 1. Face detection
 	infer_network_fd = Network()
 	# Load the model in the network, and obtain its input shape
-	fd_plugin, (n_fd, c_fd, h_fd, w_fd) = infer_network_fd.load_model(args.facemodel, args.device, cur_request_id, args.cpu_extension)
+	fd_plugin, (n_fd, c_fd, h_fd, w_fd) = infer_network_fd.load_model(args.facemodel, args.device, 0, args.cpu_extension)
 
 	# 2. head pose 
 	infer_network_pose = Network()
 	# Load the model in the network, and obtain its input shape
-	n_p, c_p, h_p, w_p = infer_network_pose.load_model(args.posemodel, args.device, cur_request_id, args.cpu_extension, fd_plugin)[1]
+	n_p, c_p, h_p, w_p = infer_network_pose.load_model(args.posemodel, args.device, 0, args.cpu_extension, fd_plugin)[1]
 
 	# 3. age (TODO: check if the plugin is added like this or no)
 	infer_network_age = Network()
 	# Load the model in the network, and obtain its input shape
-	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, cur_request_id, args.cpu_extension, fd_plugin)[1]
-	
+	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, 0, args.cpu_extension, fd_plugin)[1]
+
 	# TODO: maybe remove sync
 	if is_async_mode:
 		print("Application running in async mode...")
@@ -172,19 +172,19 @@ def main():
 
 		if is_async_mode:
 			# Async enabled and only one video capture
-			infer_network_fd.exec_net(next_request_id, in_frame_fd)
+			infer_network_fd.exec_net(cur_request_id, in_frame_fd)
 		else:
 			# Async disabled
 			infer_network_fd.exec_net(cur_request_id, in_frame_fd)
 
 		people_dict = {}
 		# Wait for the result
-		if infer_network.wait(cur_request_id) == 0:
+		if infer_network_fd.wait(cur_request_id) == 0:
 			det_time_fd = time.time() - inf_start_fd
 		# Results of the output layer of the network
-			res = infer_network.get_output(cur_request_id)
+			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
-			faces = hansdle_models.face_detection(res, args, initial_wh)
+			faces = handle_models.face_detection(res, args, initial_wh)
 
 			# then extracting the age ?? for items that are looking in the correct direction?
 			# if we have one person older than 25 and looking then send to trigger older dashboard
