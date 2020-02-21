@@ -8,22 +8,27 @@ import sys
 from inference import Network
 import logging as log
 import paho.mqtt.client as mqtt
+import socket
 
 import handle_models
 
 # Global variables
-CONFIG_FILE = '../resources/config.json'
+CONFIG_FILE = 'resources/config.json'
+
 accepted_devices = ['CPU', 'GPU', 'MYRIAD', 'HETERO:FPGA,CPU', 'HDDL']
 is_async_mode = True
 CPU_EXTENSION = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
 image_flag = False
 
 # MQTT server environment variables
-HOSTNAME = socket.gethostname()
-IPADDRESS = socket.gethostbyname(HOSTNAME)
-MQTT_HOST = IPADDRESS
-MQTT_PORT = 3001
-MQTT_KEEPALIVE_INTERVAL = 60
+
+# TODO: uncomment this part for MQTT part
+# HOSTNAME = socket.gethostname()
+# IPADDRESS = socket.gethostbyname(HOSTNAME)
+# MQTT_HOST = IPADDRESS
+# MQTT_PORT = 3001
+# MQTT_KEEPALIVE_INTERVAL = 60
+
 DEFAULT_DATA = {"dashboard": "kids"}
 
 def get_args():
@@ -52,7 +57,7 @@ def get_args():
 
 	optional.add_argument("-l", "--cpu_extension", type=str, default=CPU_EXTENSION,
 						help="extension for the CPU device")
-	# optional.add_argument("-i", help=i_desc, default=INPUT_STREAM)
+	#optional.add_argument("-i", help=i_desc, default=INPUT_STREAM)
 	optional.add_argument("-d", "--device", help=d_desc, default='CPU')
 	optional.add_argument("-ct", "--confidence",
 						  help=conf_desc, default=0.5, type=float)
@@ -83,7 +88,7 @@ def main():
 	"""
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
-	args = args_parser().parse_args()
+	args = get_args()
 	logger = log.getLogger()
 	assert os.path.isfile(CONFIG_FILE), "{} file doesn't exist".format(CONFIG_FILE)
 	config = json.loads(open(CONFIG_FILE).read())
@@ -102,9 +107,10 @@ def main():
 			image_flag =  True
 		input_stream = item
 
+	# TODO: uncomment this part for the MQTT connection
 	# Connect to the MQTT server
-	client = mqtt.Client()
-	client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
+	# client = mqtt.Client()
+	# client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
 
 
 	# Create a Network for using the Inference EngineNetwork for each model 
@@ -239,13 +245,13 @@ def main():
 						data = {"dashboard": "adult"}
 						break 
 				logger.info("data sent to the client is {}".format(data))
-				client.publish("dashboard", json.dumps(data))
+				#client.publish("dashboard", json.dumps(data))
 
 			else:
 				print("Default Dashboard since we don't have any on lookers")
 				logger.info("Default Dashboard since we don't have any on lookers")
 				logger.info("data sent to the client is {}".format(DEFAULT_DATA))
-				client.publish("dashboard", json.dumps(DEFAULT_DATA))
+				#client.publish("dashboard", json.dumps(DEFAULT_DATA))
 		if key_pressed == 27:
 			print("Attempting to stop background threads")
 			logger.info("Attempting to stop background threads")
@@ -268,7 +274,7 @@ def main():
 	infer_network_age.clean()
 	cap.release()
 	cv2.destroyAllWindows()
-	client.disconnect()
+	#client.disconnect()
 
 
 if __name__ == '__main__':

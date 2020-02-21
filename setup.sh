@@ -36,3 +36,5 @@ cd /opt/intel/openvino/deployment_tools/tools/model_downloader
 sudo ./downloader.py --name face-detection-adas-0001 --precisions FP16
 sudo ./downloader.py --name head-pose-estimation-adas-0001 --precisions FP16
 sudo ./downloader.py --name age-gender-recognition-retail-0013  --precisions FP16
+
+
