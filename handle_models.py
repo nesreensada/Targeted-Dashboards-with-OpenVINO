@@ -55,8 +55,8 @@ def pose_detection(yaw, pitch):
 		pitch: Pitch around the X-axis
 	Returns: 
 	"""
-	if ((yaw > -22.5) & (yaw < 22.5) & (pitch > -22.5) &
-		(pitch < 22.5)):
+	if ((yaw > -30) & (yaw < 30) & (pitch > -30) &
+		(pitch < 30)):
 		return True
 	else: 
 		return False
