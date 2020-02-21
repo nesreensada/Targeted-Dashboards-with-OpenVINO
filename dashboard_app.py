@@ -22,12 +22,8 @@ image_flag = False
 
 # MQTT server environment variables
 
-# TODO: uncomment this part for MQTT part
-# HOSTNAME = socket.gethostname()
-# IPADDRESS = socket.gethostbyname(HOSTNAME)
-# MQTT_HOST = IPADDRESS
-# MQTT_PORT = 3001
-# MQTT_KEEPALIVE_INTERVAL = 60
+MQTT_HOST = "localhost"
+topic = "test/message"
 
 DEFAULT_DATA = {"dashboard": "kids"}
 
@@ -111,8 +107,8 @@ def main():
 
 	# TODO: uncomment this part for the MQTT connection
 	# Connect to the MQTT server
-	# client = mqtt.Client()
-	# client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
+	client = mqtt.Client()
+	client.connect(MQTT_HOST)
 
 	cap = cv2.VideoCapture(input_stream)
 	# read the input stream 
@@ -176,12 +172,6 @@ def main():
 		# Start asynchronous inference for specified request
 		inf_start_fd = time.time()
 		infer_network_fd.exec_net(0, in_frame_fd)
-		# if is_async_mode:
-		# 	# Async enabled and only one video capture
-		# 	infer_network_fd.exec_net(cur_request_id, in_frame_fd)
-		# else:
-		# 	# Async disabled
-		# 	infer_network_fd.exec_net(cur_request_id, in_frame_fd)
 
 		people_dict = {}
 		# Wait for the result
@@ -270,7 +260,7 @@ def main():
 	infer_network_age.clean()
 	cap.release()
 	cv2.destroyAllWindows()
-	#client.disconnect()
+	client.disconnect()
 
 
 if __name__ == '__main__':
