@@ -190,7 +190,6 @@ def main():
 			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
 			faces = handle_models.face_detection(res, args.confidence, initial_wh)
-			logger.info('how many faces {}'.format(len(faces)))
 			# then extracting the age ?? for items that are looking in the correct direction?
 			# if we have one person older than 25 and looking then send to trigger older dashboard
 			if len(faces) > 0:
@@ -234,29 +233,29 @@ def main():
 				# stats messages
 				inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
 				"Inference time: {:.3f} ms".format(det_time_fd * 1000)
-				logger.info(inf_time_message)
+				#logger.info(inf_time_message)
 				head_inf_time_message = "Head pose Inference time: N\A for async mode" if is_async_mode else \
 					"Inference time: {:.3f} ms".format(det_time_hp * 1000)
-				logger.info(head_inf_time_message)
+				#logger.info(head_inf_time_message)
 				age_inf_time_message = "Age Gender Inference time: N\A for async mode" if is_async_mode else \
 					"Inference time: {:.3f} ms".format(det_time_a * 1000)
-				logger.info(head_inf_time_message)
+				#logger.info(head_inf_time_message)
 
 				data = DEFAULT_DATA
+				message= "Kids dashboard is being displayed"
 
-				logger.info('detected_people {}'.format(people_dict))
+				#logger.info('detected {}'.format(people_dict))
 				# send the decision to the dashboard based on the people detected
 				for people_id, poeple_prop in people_dict.items():
-					if poeple_prop['age'] >= 25 and poeple_prop['looking']:
+					if poeple_prop['age'] >= 21 and poeple_prop['looking']:
 						data = {"dashboard": "adult"}
-						break 
-				logger.info("data sent to the client is {}".format(data))
+						message= "{} looker(s) older than 21 y/o found (age {}). Detailed dashboard is being displayed".format(len(faces),poeple_prop['age'])
+						break
+				logger.info(message)
 				#client.publish("dashboard", json.dumps(data))
 
 			else:
-				print("Default Dashboard since we don't have any on lookers")
-				logger.info("Default Dashboard since we don't have any on lookers")
-				logger.info("data sent to the client is {}".format(DEFAULT_DATA))
+				logger.info("Kids dashboard is being displayed")
 				#client.publish("dashboard", json.dumps(DEFAULT_DATA))
 		if key_pressed == 27:
 			logger.info("Attempting to stop background threads")
