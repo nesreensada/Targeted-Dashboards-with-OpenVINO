@@ -42,12 +42,13 @@ class Network:
         self.net_plugin = None
         self.infer_request = None
 
-    def load_model(self, model, device, cpu_extension=None, plugin=None):
+    def load_model(self, model, device, num_requests, cpu_extension=None, plugin=None):
         """
          Loads a network and an image to the Inference Engine plugin.
         :param model: .xml file of pre trained model
         :param cpu_extension: extension for the CPU device
         :param device: Target device
+        :param num_requests: Index of Infer request value. Limited to device capabilities.
         :param plugin: Plugin for specified device
         :return:  Shape of input layer
         """
@@ -72,6 +73,12 @@ class Network:
         # Add a CPU extension, if applicable
         if cpu_extension and "CPU" in device:
             self.plugin.add_extension(cpu_extension, device)
+
+        if num_requests == 0:
+            # Loads network read from IR to the plugin
+            self.net_plugin = self.plugin.load(network=self.net)
+        else:
+            self.net_plugin = self.plugin.load(network=self.net, num_requests=num_requests)
 
 
         self.input_blob = next(iter(self.net.inputs))

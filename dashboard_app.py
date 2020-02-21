@@ -112,23 +112,6 @@ def main():
 	# client = mqtt.Client()
 	# client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
 
-
-	# Create a Network for using the Inference EngineNetwork for each model 
-	# 1. Face detection
-	infer_network_fd = Network()
-	# Load the model in the network, and obtain its input shape
-	fd_plugin, (n_fd, c_fd, h_fd, w_fd) = infer_network_fd.load_model(args.facemodel, args.device, args.cpu_extension)
-
-	# 2. head pose 
-	infer_network_pose = Network()
-	# Load the model in the network, and obtain its input shape
-	n_p, c_p, h_p, w_p = infer_network_pose.load_model(args.posemodel, args.device, args.cpu_extension, fd_plugin)[1]
-
-	# 3. age (TODO: check if the plugin is added like this or no)
-	infer_network_age = Network()
-	# Load the model in the network, and obtain its input shape
-	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, args.cpu_extension, fd_plugin)[1]
-
 	cap = cv2.VideoCapture(input_stream)
 	# read the input stream 
 	if input_stream:
@@ -143,6 +126,22 @@ def main():
 	cur_request_id = 0
 	next_request_id = 1
 
+	# Create a Network for using the Inference EngineNetwork for each model 
+	# 1. Face detection
+	infer_network_fd = Network()
+	# Load the model in the network, and obtain its input shape
+	fd_plugin, (n_fd, c_fd, h_fd, w_fd) = infer_network_fd.load_model(args.facemodel, args.device, cur_request_id, args.cpu_extension)
+
+	# 2. head pose 
+	infer_network_pose = Network()
+	# Load the model in the network, and obtain its input shape
+	n_p, c_p, h_p, w_p = infer_network_pose.load_model(args.posemodel, args.device, cur_request_id, args.cpu_extension, fd_plugin)[1]
+
+	# 3. age (TODO: check if the plugin is added like this or no)
+	infer_network_age = Network()
+	# Load the model in the network, and obtain its input shape
+	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, cur_request_id, args.cpu_extension, fd_plugin)[1]
+	
 	# TODO: maybe remove sync
 	if is_async_mode:
 		print("Application running in async mode...")
