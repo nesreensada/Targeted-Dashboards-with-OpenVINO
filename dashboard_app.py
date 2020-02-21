@@ -78,7 +78,6 @@ def main():
 	Returns:
 		None
 	"""
-	print('test')
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
 	args = get_args()
@@ -94,14 +93,12 @@ def main():
 	item = config['input']['video']
 	image_flag = False
 
-	# TODO: add image as an option for the input stream 
 	if item.isdigit():
 		# CAM 
 		input_stream = int(item)
 	else:
 		# video or images
 		if item.endswith('.jpg') or item.endswith('.bmp') or item.endswith('.png'):
-			# TODO: handle images
 			image_flag =  True
 		input_stream = item
 
@@ -243,11 +240,11 @@ def main():
 						message= "{} looker(s) older than 21 y/o found (age {}). Detailed dashboard is being displayed".format(len(faces),poeple_prop['age'])
 						break
 				logger.info(message)
-				#client.publish("dashboard", json.dumps(data))
+				client.publish(topic, json.dumps(data))
 
 			else:
 				logger.info("Kids dashboard is being displayed")
-				#client.publish("dashboard", json.dumps(DEFAULT_DATA))
+				client.publish(topic, json.dumps(DEFAULT_DATA))
 		if key_pressed == 27:
 			logger.info("Attempting to stop background threads")
 			break
