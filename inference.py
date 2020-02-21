@@ -76,9 +76,9 @@ class Network:
 
         if num_requests == 0:
             # Loads network read from IR to the plugin
-            self.net_plugin = self.plugin.load(network=self.net)
+            self.net_plugin = self.plugin.load_network(network=self.net, device_name=device)
         else:
-            self.net_plugin = self.plugin.load(network=self.net, num_requests=num_requests)
+            self.net_plugin = self.plugin.load_network(network=self.net, num_requests=num_requests, device_name=device)
 
 
         self.input_blob = next(iter(self.net.inputs))

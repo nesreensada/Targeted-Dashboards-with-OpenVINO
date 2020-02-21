@@ -33,7 +33,7 @@ wget -O face-demographics-walking-and-pause.mp4 https://github.com/intel-iot-dev
 
 #Download the model
 cd /opt/intel/openvino/deployment_tools/tools/model_downloader
-sudo ./downloader.py --name face-detection-adas-0001 --precisions FP16
+sudo ./downloader.py --name face-detection-retail-0004 --precisions FP16
 sudo ./downloader.py --name head-pose-estimation-adas-0001 --precisions FP16
 sudo ./downloader.py --name age-gender-recognition-retail-0013  --precisions FP16
 
