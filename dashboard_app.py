@@ -157,7 +157,7 @@ def main():
 		# number of people looking
 		looking = 0
 		ret, frame = cap.read()
-		
+
 		if not ret: 
 			log.error("ERROR! blank FRAME grabbed")
 			break
@@ -190,7 +190,7 @@ def main():
 			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
 			faces = handle_models.face_detection(res, args.confidence, initial_wh)
-			logger.info('how many faces { }'.format(len(faces)))
+			logger.info('how many faces {}'.format(len(faces)))
 			# then extracting the age ?? for items that are looking in the correct direction?
 			# if we have one person older than 25 and looking then send to trigger older dashboard
 			if len(faces) > 0:
