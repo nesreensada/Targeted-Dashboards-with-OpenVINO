@@ -71,10 +71,6 @@ def get_args():
 		print("Unsupported Device: {}, accepted_devices: {}".format(
 			args.device, accepted_devices))
 		sys.exit(1)
-	if args.flag == "sync":
-		is_async_mode = False
-	else:
-		is_async_mode = True
 	return args
 
 
@@ -89,6 +85,10 @@ def main():
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
 	args = get_args()
+	if args.flag == "sync":
+		is_async_mode = False
+	else:
+		is_async_mode = True
 	logger = log.getLogger()
 	assert os.path.isfile(CONFIG_FILE), "{} file doesn't exist".format(CONFIG_FILE)
 	config = json.loads(open(CONFIG_FILE).read())
@@ -129,11 +129,12 @@ def main():
 	# Load the model in the network, and obtain its input shape
 	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, args.cpu_extension, fd_plugin)[1]
 
+	cap = cv2.VideoCapture(input_stream)
 	# read the input stream 
 	if input_stream:
 		cap.open(input_stream)
 		# Adjust DELAY to match the number of FPS of the video file
-		DELAY = 1000 / cap.get(cv2.CAP_PROP_FPS)
+		#DELAY = 1000 / cap.get(cv2.CAP_PROP_FPS)
 
 	if not cap.isOpened():
 		logger.error("ERROR! Unable to open video source")
@@ -156,7 +157,7 @@ def main():
 		# number of people looking
 		looking = 0
 		ret, frame = cap.read()
-		if not ret or not frame:
+		if not ret or frame is None: 
 			log.error("ERROR! blank FRAME grabbed")
 			break
 
@@ -165,7 +166,7 @@ def main():
 		# preprocessing(input_image, height, width)
 		in_frame_fd = handle_models.preprocessing(frame, h_fd, w_fd)
 
-		key_pressed = cv2.waitKey(int(DELAY))
+		key_pressed = cv2.waitKey(60)
 
 		# Start asynchronous inference for specified request
 		inf_start_fd = time.time()
@@ -269,7 +270,7 @@ def main():
 			handle_models.create_output_image(frame, people_dict)
 
 
-	infer_network.clean()
+	infer_network_fd.clean()
 	infer_network_pose.clean()
 	infer_network_age.clean()
 	cap.release()
