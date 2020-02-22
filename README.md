@@ -13,13 +13,18 @@ Information about the building coming sensors can be displayed in an unlimited n
 ![Kids-friendly dashboard](./docs/images/image1.png)
 
 **Neural compute stick**
-![Neural compute stick](./docs/images/image6.png)
+![Neural compute stick](./docs/images/image6.jpg)
+
 **Neural compute stick connected the Raspberry Pi**
-![Neural compute stick connected the Raspberry Pi](./docs/images/image4.png)
+
+![Neural compute stick connected the Raspberry Pi](./docs/images/image4.jpg)
+
 **Demo Setup**
-![Demo Setup](./docs/images/image8.png)
+![Demo Setup](./docs/images/image8.jpg)
+
 **The application dashboard output**
 ![Dashboard](./docs/images/image2.png)
+
 **The MQTT client window output**
 ![The MQTT client window output](./docs/images/image3.png)
 
