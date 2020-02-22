@@ -6,7 +6,7 @@ Final Project for Intel edge scholarship with the aim of making energy efficienc
 
 Information about the building coming sensors can be displayed in an unlimited number of forms through public dashboards. However, this information can be confusing for building users of certain ages, especially when the users are kids. No building user is irrelevant, thus we aim to include them in the energy efficiency journey through special dashboards that provide information targeted for children but at the same time, detailed information is available when adults are looking at them.
 
-Here is a link for the [document with more details about this project and the setup](https://drive.google.com/file/d/1MK2VHTbvK8ZD9Uk5DzVddrq316vfhnfy/view?usp=sharing)
+Here is a link for the [project documentation](https://drive.google.com/file/d/1MK2VHTbvK8ZD9Uk5DzVddrq316vfhnfy/view?usp=sharing)
 ## Requirements
 ### Hardware
 
