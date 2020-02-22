@@ -44,7 +44,6 @@ def face_detection(res, conf_threshold, initial_wh):
 
 def pose_detection(yaw, pitch):
 	"""
-	#TODO: this condition needs to be checked 
 	Method to extract the onlookers from the 
 	yaw and pitch parameters detected from the head pose
 	from the model 
@@ -54,6 +53,7 @@ def pose_detection(yaw, pitch):
 		yaw: Yaw is the rotation around the Y-axis.   
 		pitch: Pitch around the X-axis
 	Returns: 
+		boolean with True if the person is looking 
 	"""
 	if ((yaw > -30) & (yaw < 30) & (pitch > -30) &
 		(pitch < 30)):
@@ -68,7 +68,7 @@ def age_detection(age, gender):
 		age
 		gender
 	Returns: 
-		Age of the given face coordinates
+		Age of the given face coordinates and the gender
 	"""
 	GENDER_TYPE = ["male", "female"]
 	age = int(age[0] * 100)

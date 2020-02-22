@@ -1,4 +1,6 @@
 FROM ubuntu:16.04
+LABEL maintainer="nullbyte.in@gmail.com"
+
 ARG proxy
 
 ENV http_proxy $proxy
@@ -52,8 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libbz2-dev \
         liblzma-dev \
         pkg-config \
-        libsox-dev \
-
+        libsox-dev 
 
 # Install pip
 RUN wget https://bootstrap.pypa.io/get-pip.py && \

@@ -1,35 +1,11 @@
-python app.py -i "images/sitting-on-car.jpg" -t "POSE" -m "/models/FP16/human-pose-estimation-0001.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
-
-
-# test the preprocessing (age gender)
-python3 app.py -i "images/man_face.jpg" -t "AGE_GEN" -m "models/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
-
-
-# test the preprocessing face people
-python app.py -i "images/group_people.jpg" -t "FACE" -m "/home/workspace/models/face-detection-retail-0004.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so" -ct 0.5
-
-# test the preprocessing for headpose
-python app.py -i "images/head_poses2.png" -t "HEAD_POSE" -m "/home/workspace/models/head-pose-estimation-adas-0001.xml" -c "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so" -ct 0.5
-
-
-# check if the inference is successful 
-
-python feed_network.py -m /home/workspace/models/human-pose-estimation-0001.xml
-
-python feed_network.py -m /home/workspace/models/head-pose-estimation-adas-0001.xml
-
---> move the folders and files needed for the docker inside like code and such
-
-#steps to run docker: 
-
 # To build a docker images
+
+cd docker 
 docker build --rm --build-arg proxy=$http_proxy --rm --tag openvino:v1 .
+
 
 # To Run docker images
 docker run -v /etc/localtime:/etc/localtime:ro --rm -it -e http_proxy -e https_proxy -e ftp_proxy -v `pwd`:/work openvino:v1 bash
-
-# To run a docker with X11 support for GUI Application
-docker run -v /etc/localtime:/etc/localtime:ro --rm -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -e http_proxy -e https_proxy -e ftp_proxy -v `pwd`:/work openvino:v1 bash
 
 # To mount the camera and access camera from docker env
 docker run -v /etc/localtime:/etc/localtime:ro --rm -it --device /dev/video0 -e http_proxy -e https_proxy -e ftp_proxy -v `pwd`:/work openvino:v1 bash
@@ -37,43 +13,26 @@ docker run -v /etc/localtime:/etc/localtime:ro --rm -it --device /dev/video0 -e 
 
 # steps in docker:
 
-build docker 
+## missing directories
+mkdir models
+mkdir images
 
-0.o. sudo docker build -t openvino .
-- depending on the build 
-0.1. sudo docker run -it --privileged b0d18dd7c115 
-1. pip3 install requests
-2. pip3 install pyyaml 
-3. mkdir models
-4. mkdir images
-5. pip3 install opencv-python
-
+## missing libararies 
+sudo apt-get update
+sudo apt-get install python3-pip
+sudo apt-get install mosquitto mosquitto-clients
+sudo pip3 install numpy jupyter paho-mqtt
+pip3 install opencv-python
 
 
 # locally:
-0. get the container name 
+0. get the running container name 
 1.sudo docker cp /home/nisreen/Downloads/handle_models.py 21ffb12e9b38:/opt/intel/.
 2. sudo docker cp /home/nisreen/Downloads/app.py 21ffb12e9b38:/opt/intel/.
 3.
 sudo docker cp images/. 21ffb12e9b38:/opt/intel/images/.
 4. sudo docker cp models/human-pose-estimation-0001/. 21ffb12e9b38:/opt/intel/models/.
 
-
-
-docker build . -t openvino \
---build-arg HTTP_PROXY=localhost:5000 \
---build-arg HTTPS_PROXY=localhost:5000
-
-
-# copy images
-# take the models path 
-
-/opt/intel/openvino/deployment_tools/intel_models
-
-
-
-# remember we need to use FP16 for neuro (example)
-python3 shopper_gaze_monitor.py -d MYRIAD -m /opt/intel/openvino/deployment_tools/open_model_zoo/tools/downloader/intel/face-detection-adas-0001/FP16/face-detection-adas-0001.xml -pm /opt/intel/openvino/deployment_tools/open_model_zoo/tools/downloader/intel/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001.xml
 
 # running command 
 

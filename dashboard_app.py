@@ -16,15 +16,12 @@ import handle_models
 CONFIG_FILE = 'resources/config.json'
 
 accepted_devices = ['CPU', 'GPU', 'MYRIAD', 'HETERO:FPGA,CPU', 'HDDL']
-is_async_mode = True
 CPU_EXTENSION = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so"
 image_flag = False
 
 # MQTT server environment variables
-
 MQTT_HOST = "localhost"
 topic = "test/message"
-
 DEFAULT_DATA = {"dashboard": "kids"}
 
 def get_args():
@@ -53,12 +50,9 @@ def get_args():
 
 	optional.add_argument("-l", "--cpu_extension", type=str, default=CPU_EXTENSION,
 						help="extension for the CPU device")
-	#optional.add_argument("-i", help=i_desc, default=INPUT_STREAM)
 	optional.add_argument("-d", "--device", help=d_desc, default='CPU')
 	optional.add_argument("-ct", "--confidence",
 						  help=conf_desc, default=0.5, type=float)
-	parser.add_argument("-f", "--flag", help=req_desc,
-						default="async", type=str)
 
 	args = parser.parse_args()
 	if args.device not in accepted_devices:
@@ -81,10 +75,6 @@ def main():
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
 	args = get_args()
-	if args.flag == "sync":
-		is_async_mode = False
-	else:
-		is_async_mode = True
 	logger = log.getLogger()
 	assert os.path.isfile(CONFIG_FILE), "{} file doesn't exist".format(CONFIG_FILE)
 	config = json.loads(open(CONFIG_FILE).read())
@@ -102,7 +92,6 @@ def main():
 			image_flag =  True
 		input_stream = item
 
-	# TODO: uncomment this part for the MQTT connection
 	# Connect to the MQTT server
 	client = mqtt.Client()
 	client.connect(MQTT_HOST)
@@ -119,7 +108,6 @@ def main():
 
 	# Init inference request IDs
 	cur_request_id = 0
-	next_request_id = 1
 
 	# Create a Network for using the Inference EngineNetwork for each model 
 	# 1. Face detection
@@ -137,13 +125,6 @@ def main():
 	# Load the model in the network, and obtain its input shape
 	n_a, c_a, h_a, w_a = infer_network_age.load_model(args.agemodel, args.device, 0, args.cpu_extension, fd_plugin)[1]
 
-	# TODO: maybe remove sync
-	if is_async_mode:
-		print("Application running in async mode...")
-		logger.info("Application running in async mode...")
-	else:
-		print("Application running in sync mode...")
-		logger.info("Application running in sync mode...")
 	# performance bottlenecks
 	det_time_fd = 0
 	ret, frame = cap.read()
@@ -167,13 +148,12 @@ def main():
 		key_pressed = cv2.waitKey(60)
 
 		# Start asynchronous inference for specified request
-		inf_start_fd = time.time()
 		infer_network_fd.exec_net(0, in_frame_fd)
 
 		people_dict = {}
 		# Wait for the result
 		if infer_network_fd.wait(cur_request_id) == 0:
-			det_time_fd = time.time() - inf_start_fd
+			
 		# Results of the output layer of the network
 			res = infer_network_fd.get_output(cur_request_id)
 			# Parse face detection output
@@ -189,50 +169,31 @@ def main():
 
 					# preprocessing for headpose and age models
 					in_frame_hp = handle_models.preprocessing(face_frame, w_p, h_p)
-					in_frame_age = handle_models.preprocessing(face_frame, w_a, h_a)
-					
-
-					inf_start_hp = time.time()
+					in_frame_age = handle_models.preprocessing(face_frame, w_a, h_a)					
 					infer_network_pose.exec_net(cur_request_id, in_frame_hp)
 					infer_network_pose.wait(cur_request_id)
-					det_time_hp = time.time() - inf_start_hp
 
-					# Parse head pose detection results
+					## Parse head pose detection results 
+
 					# pitch angle: Pitch around the X-axis
 					angle_p_fc = infer_network_pose.get_output(0, "angle_p_fc").flatten()[0]
 					# yaw pose: Yaw is the rotation around the Y-axis.   
 					angle_y_fc = infer_network_pose.get_output(0, "angle_y_fc").flatten()[0]
-
-					# this needs to be moved to the decision stage and preporcessing 
 					looking_flag = handle_models.pose_detection(yaw = angle_y_fc, pitch=angle_p_fc)
 
 					# age detection 
-					inf_start_a = time.time()
 					infer_network_age.exec_net(cur_request_id, in_frame_age)
 					infer_network_age.wait(cur_request_id)
-					det_time_a = time.time() - inf_start_a
 
-					# check if i need to flatten or no
 					human_age = infer_network_age.get_output(0, "age_conv3").flatten()
 					human_gender = infer_network_age.get_output(0, "prob").flatten()
 					age, gender = handle_models.age_detection(human_age, human_gender)
 					people_dict[face_id] = {'coordinates': face_loc, 'pose':{'yaw':angle_y_fc, 'pitch':angle_p_fc},
 					 'age': age, 'gender':gender, 'looking':looking_flag}
-				# stats messages
-				inf_time_message = "Face Inference time: N\A for async mode" if is_async_mode else \
-				"Inference time: {:.3f} ms".format(det_time_fd * 1000)
-				#logger.info(inf_time_message)
-				head_inf_time_message = "Head pose Inference time: N\A for async mode" if is_async_mode else \
-					"Inference time: {:.3f} ms".format(det_time_hp * 1000)
-				#logger.info(head_inf_time_message)
-				age_inf_time_message = "Age Gender Inference time: N\A for async mode" if is_async_mode else \
-					"Inference time: {:.3f} ms".format(det_time_a * 1000)
-				#logger.info(head_inf_time_message)
-
+				
 				data = DEFAULT_DATA
 				message= "Kids dashboard is being displayed"
 
-				#logger.info('detected {}'.format(people_dict))
 				# send the decision to the dashboard based on the people detected
 				for people_id, poeple_prop in people_dict.items():
 					if poeple_prop['age'] >= 21 and poeple_prop['looking']:
@@ -241,7 +202,6 @@ def main():
 						break
 				logger.info(message)
 				client.publish(topic, json.dumps(data))
-
 			else:
 				logger.info("Kids dashboard is being displayed")
 				client.publish(topic, json.dumps(DEFAULT_DATA))
