@@ -135,11 +135,8 @@ To execute the project, first ensure that you have installed all the required de
 
 To run on the Intel® Neural Compute Stick, use the ```-d MYRIAD``` command-line argument:
 ```
-    python3.7 dashboard_app.py -fm models/face-detection-retail-0004/FP16/face-
-detection-retail-0004.xml -pm models/head-pose-estimation-adas-
-0001/FP16/head-pose-estimation-adas-0001.xml -ag_m models/age-gender-
-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.xml -d
-MYRIAD
+  python3.7 dashboard_app.py -fm models/face-detection-retail-0004/FP16/face-detection-retail-0004.xml -pm models/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001.xml -ag_m models/age-gender-recognition-retail-0013/FP16/age-gender-recognition-retail-0013.xml -dMYRIAD
+  
 ```
 
 **Note:** The Intel® Neural Compute Stick can only run FP16 models. The model that is passed to the application, through the `-m <path_to_model>` command-line argument, must be of data type FP16.
