@@ -21,7 +21,7 @@ Information about the building coming sensors can be displayed in an unlimited n
 ![Dashboard](./images/image2.png)
 
 **The MQTT client window output**
-![The MQTT client window output](./images/image3.png)
+![The MQTT client window output](./images/image3_updated.png)
 
 
 ## Requirements
