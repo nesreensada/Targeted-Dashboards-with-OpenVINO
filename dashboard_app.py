@@ -242,7 +242,7 @@ def main():
 					if poeple_prop['age'] >= 21 and poeple_prop['looking']:
 						data = {"dashboard": "adult"}
 						message= "{} looker(s) older than 21 y/o found (age {}). Detailed dashboard is being displayed".format(len(faces),poeple_prop['age'])
-					break
+						break
 				logger.info(message)
 				if data != PREVIOUS_DATA:
 					client.publish(topic, json.dumps(data))
