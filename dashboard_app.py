@@ -27,6 +27,7 @@ topic = "test/message"
 
 DEFAULT_DATA = {"dashboard": "kids"}
 
+
 def get_args():
 	"""
 	Method to extract the arguments from the command line
@@ -78,6 +79,7 @@ def main():
 	Returns:
 		None
 	"""
+
 	log.basicConfig(format="[ %(levelname)s ] %(message)s",
 					level=log.INFO, stream=sys.stdout)
 	args = get_args()
@@ -106,6 +108,7 @@ def main():
 	# Connect to the MQTT server
 	client = mqtt.Client()
 	client.connect(MQTT_HOST)
+	PREVIOUS_DATA = {}
 
 	cap = cv2.VideoCapture(input_stream)
 	# read the input stream 
@@ -148,6 +151,7 @@ def main():
 	det_time_fd = 0
 	ret, frame = cap.read()
 	while ret:
+		
 		# number of people looking
 		looking = 0
 		ret, frame = cap.read()
@@ -238,13 +242,17 @@ def main():
 					if poeple_prop['age'] >= 21 and poeple_prop['looking']:
 						data = {"dashboard": "adult"}
 						message= "{} looker(s) older than 21 y/o found (age {}). Detailed dashboard is being displayed".format(len(faces),poeple_prop['age'])
-						break
+					break
 				logger.info(message)
-				client.publish(topic, json.dumps(data))
+				if data != PREVIOUS_DATA:
+					client.publish(topic, json.dumps(data))
+				PREVIOUS_DATA = data
 
 			else:
 				logger.info("Kids dashboard is being displayed")
-				client.publish(topic, json.dumps(DEFAULT_DATA))
+				if data != PREVIOUS_DATA:
+					client.publish(topic, json.dumps(data))
+				PREVIOUS_DATA = data
 		if key_pressed == 27:
 			logger.info("Attempting to stop background threads")
 			break
